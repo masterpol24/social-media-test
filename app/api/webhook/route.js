@@ -1,7 +1,7 @@
 import { Webhook } from 'svix'
 import { headers } from 'next/headers'
-import { WebhookEvent } from '@clerk/nextjs/server'
-import { createOrUpdateUser } from '../../../lib/actions/user'
+import { connectToDB } from '@/lib/mongodb/mongoose'
+import { createOrUpdateUser, deleteUser } from '@/lib/actions/user'
 
 export async function POST(req) {
   const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET
@@ -9,6 +9,9 @@ export async function POST(req) {
   if (!WEBHOOK_SECRET) {
     throw new Error('Please add WEBHOOK_SECRET from Clerk Dashboard to .env or .env.local')
   }
+
+  // Connect to the MongoDB database
+  await connectToDB()
 
   const headerPayload = headers(req)
   const svix_id = headerPayload.get('svix-id')
@@ -42,7 +45,7 @@ export async function POST(req) {
     const { id, first_name, last_name, image_url, email_addresses, username } = evt?.data
 
     try {
-      await createOrUpdateUser(id, first_name, last_name, image_url, email_addresses, username)
+      await createOrUpdateUser(id, first_name, last_name, username, email_addresses[0].email, image_url)
 
       return new Response('User is created or updated', { status: 200 })
     } catch (err) {
@@ -63,4 +66,6 @@ export async function POST(req) {
       return new Response('Error occurred', { status: 500 })
     }
   }
+
+  return new Response('Unsupported event type', { status: 400 })
 }
