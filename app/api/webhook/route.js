@@ -45,7 +45,7 @@ export async function POST(req) {
     const { id, first_name, last_name, image_url, email_addresses, username } = evt?.data
 
     try {
-      await createOrUpdateUser(id, first_name, last_name, username, email_addresses[0].email, image_url)
+      await createOrUpdateUser(id, first_name, last_name, username, email_addresses[0].email_address, image_url)
 
       return new Response('User is created or updated', { status: 200 })
     } catch (err) {
